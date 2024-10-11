@@ -18,18 +18,18 @@
 
     <!-- Botões de filtro por mês -->
     <div class="text-center my-3">
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(1)">Janeiro</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(2)">Fevereiro</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(3)">Março</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(4)">Abril</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(5)">Maio</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(6)">Junho</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(7)">Julho</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(8)">Agosto</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(9)">Setembro</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(10)">Outubro</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(11)">Novembro</button>
-        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(12)">Dezembro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-janeiro">Janeiro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-fevereiro">Fevereiro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-marco">Março</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-abril">Abril</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-maio">Maio</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-junho">Junho</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-julho">Julho</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-agosto">Agosto</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-setembro">Setembro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-outubro">Outubro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-novembro">Novembro</button>
+        <button class="btn btn-outline-primary mx-1" id="btn-dezembro">Dezembro</button>
     </div>
 
     <!-- Carousel for displaying the charts -->
@@ -62,7 +62,6 @@
 <!-- Inline Script for loading the Excel file and creating the chart -->
 <script>
     let originalData = []; // Para armazenar todos os dados da planilha
-    let columnData = {}; // Para armazenar a contagem de cada item filtrado
     let chartInstance = null; // Para armazenar a instância do gráfico
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -76,17 +75,17 @@
                     const worksheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                     originalData = jsonData; // Armazena os dados originais
-                    filterByMonth(null); // Carrega o gráfico sem filtro de mês no início
+                    updateChartForMonth(null); // Carrega o gráfico sem filtro de mês no início
                 });
         }
 
         // Filtra os dados pelo mês selecionado (coluna 1 com a data)
-        function filterByMonth(month) {
-            columnData = {}; // Reinicia o objeto para armazenar os dados
+        function updateChartForMonth(month) {
+            const columnData = {}; // Reinicia o objeto para armazenar os dados
 
             for (let i = 1; i < originalData.length; i++) {
                 const item = originalData[i][2]; // Coluna 3
-                const date = originalData[i][4]; // Coluna 1 (data)
+                const date = originalData[i][0]; // Coluna 1 (data)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
@@ -144,8 +143,35 @@
             });
         }
 
+        // Função para associar os botões de mês aos eventos de clique
+        function setupMonthButtons() {
+            const months = [
+                { id: "btn-janeiro", month: 1 },
+                { id: "btn-fevereiro", month: 2 },
+                { id: "btn-marco", month: 3 },
+                { id: "btn-abril", month: 4 },
+                { id: "btn-maio", month: 5 },
+                { id: "btn-junho", month: 6 },
+                { id: "btn-julho", month: 7 },
+                { id: "btn-agosto", month: 8 },
+                { id: "btn-setembro", month: 9 },
+                { id: "btn-outubro", month: 10 },
+                { id: "btn-novembro", month: 11 },
+                { id: "btn-dezembro", month: 12 },
+            ];
+
+            months.forEach(({ id, month }) => {
+                document.getElementById(id).addEventListener('click', () => {
+                    updateChartForMonth(month); // Filtra o gráfico para o mês selecionado
+                });
+            });
+        }
+
         // Carrega a planilha (certifique-se que está no mesmo diretório)
         loadExcelFile('clicheria.xlsx');
+
+        // Configura os botões de mês
+        setupMonthButtons();
     });
 </script>
 
