@@ -78,30 +78,50 @@
                 });
         }
 
-        // Filtra os dados pelo mês selecionado (coluna 1 com a data)
-        function updateChartForMonth(month) {
-            const columnData = {}; // Reinicia o objeto para armazenar os dados
+// Função para analisar a data no formato DD-MM-YYYY
+function parseDate(dateString) {
+    const parts = dateString.split('-');
+    // Verifica se a data está no formato esperado
+    if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Mês é zero-indexed
+        const year = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+    }
+    return null; // Retorna null se o formato não for válido
+}
 
-            for (let i = 1; i < originalData.length; i++) {
-                const item = originalData[i][2]; // Coluna 3 (itens)
-                const date = originalData[i][0]; // Coluna 1 (data)
+// Filtra os dados pelo mês selecionado (coluna 1 com a data)
+function updateChartForMonth(month) {
+    const columnData = {}; // Reinicia o objeto para armazenar os dados
 
-                if (item && date) {
-                    const parsedDate = new Date(Date.parse(date));
-                    const itemMonth = parsedDate.getMonth() + 1;
+    for (let i = 1; i < originalData.length; i++) {
+        const item = originalData[i][2]; // Coluna 3 (itens)
+        const date = originalData[i][0]; // Coluna 1 (data)
 
-                    // Verifica se o item pertence ao mês selecionado
-                    if (!month || itemMonth === month) {
-                        columnData[item] = (columnData[item] || 0) + 1;
-                    }
+        if (item && date) {
+            const parsedDate = parseDate(date); // Usa a nova função para analisar a data
+            if (parsedDate) { // Verifica se a data foi analisada corretamente
+                const itemMonth = parsedDate.getMonth() + 1;
+
+                // Verifica se o item pertence ao mês selecionado
+                if (!month || itemMonth === month) {
+                    columnData[item] = (columnData[item] || 0) + 1;
                 }
+            } else {
+                console.error('Data inválida:', date);
             }
-
-            const labels = Object.keys(columnData);
-            const values = Object.values(columnData);
-
-            generateBarChart(labels, values);
         }
+    }
+
+    const labels = Object.keys(columnData);
+    const values = Object.values(columnData);
+
+    console.log('Labels:', labels);
+    console.log('Values:', values);
+
+    generateBarChart(labels, values);
+}
 
         function generateBarChart(labels, data) {
             const ctx = document.getElementById('barChart').getContext('2d');
