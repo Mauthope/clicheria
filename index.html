@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Responsivo</title>
-    <!-- Bootstrap CSS for the carousel -->
+    <!-- Bootstrap CSS for the carousel and layout -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Chart.js for generating charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,24 +14,45 @@
 <body>
 
 <div class="container mt-5">
-    <h2>Dashboard de Gráficos</h2>
+    <h2 class="text-center">Dashboard de Gráficos</h2>
+
+    <!-- Botões de filtro por mês -->
+    <div class="text-center my-3">
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(1)">Janeiro</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(2)">Fevereiro</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(3)">Março</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(4)">Abril</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(5)">Maio</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(6)">Junho</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(7)">Julho</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(8)">Agosto</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(9)">Setembro</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(10)">Outubro</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(11)">Novembro</button>
+        <button class="btn btn-outline-primary mx-1" onclick="filterByMonth(12)">Dezembro</button>
+    </div>
+
     <!-- Carousel for displaying the charts -->
-    <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <!-- First carousel item (Bar chart) -->
-            <div class="carousel-item active">
-                <canvas id="barChart" width="400" height="200"></canvas>
+    <div class="card">
+        <div class="card-body">
+            <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <!-- First carousel item (Bar chart) -->
+                    <div class="carousel-item active">
+                        <canvas id="barChart" width="400" height="200"></canvas>
+                    </div>
+                    <!-- Additional carousel items can go here -->
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
             </div>
-            <!-- Additional carousel items can go here -->
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </button>
     </div>
 </div>
 
@@ -40,6 +61,10 @@
 
 <!-- Inline Script for loading the Excel file and creating the chart -->
 <script>
+    let originalData = []; // Para armazenar todos os dados da planilha
+    let columnData = {}; // Para armazenar a contagem de cada item filtrado
+    let chartInstance = null; // Para armazenar a instância do gráfico
+
     document.addEventListener('DOMContentLoaded', function () {
         // Carrega a planilha usando SheetJS
         function loadExcelFile(filePath) {
@@ -50,30 +75,39 @@
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    processData(jsonData);
+                    originalData = jsonData; // Armazena os dados originais
+                    filterByMonth(null); // Carrega o gráfico sem filtro de mês no início
                 });
         }
 
-        function processData(data) {
-            const columnData = {}; // Objeto para armazenar a contagem de cada item
+        // Filtra os dados pelo mês selecionado (coluna 1 com a data)
+        function filterByMonth(month) {
+            columnData = {}; // Reinicia o objeto para armazenar os dados
 
-            // Vamos começar a partir da segunda linha (1) para evitar o cabeçalho (linha 0)
-            for (let i = 1; i < data.length; i++) {
-                const item = data[i][2]; // Coluna 3 é indexada por 2
-                if (item) {
+            for (let i = 1; i < originalData.length; i++) {
+                const item = originalData[i][2]; // Coluna 3
+                const date = originalData[i][0]; // Coluna 1 (data)
+
+                if (item && (!month || (new Date(date).getMonth() + 1) === month)) {
                     columnData[item] = (columnData[item] || 0) + 1;
                 }
             }
 
-            const labels = Object.keys(columnData); // Os itens da coluna 3
-            const values = Object.values(columnData); // As contagens desses itens
+            const labels = Object.keys(columnData);
+            const values = Object.values(columnData);
 
             generateBarChart(labels, values);
         }
 
         function generateBarChart(labels, data) {
             const ctx = document.getElementById('barChart').getContext('2d');
-            new Chart(ctx, {
+
+            // Destroi o gráfico anterior, se existir
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels, // Exibe os itens da coluna 3
