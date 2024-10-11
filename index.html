@@ -41,7 +41,6 @@
                     <div class="carousel-item active">
                         <canvas id="barChart" width="400" height="200"></canvas>
                     </div>
-                    <!-- Additional carousel items can go here -->
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -84,13 +83,14 @@
             const columnData = {}; // Reinicia o objeto para armazenar os dados
 
             for (let i = 1; i < originalData.length; i++) {
-                const item = originalData[i][2]; // Coluna 3
+                const item = originalData[i][2]; // Coluna 3 (itens)
                 const date = originalData[i][0]; // Coluna 1 (data)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
                     const itemMonth = parsedDate.getMonth() + 1;
 
+                    // Verifica se o item pertence ao mês selecionado
                     if (!month || itemMonth === month) {
                         columnData[item] = (columnData[item] || 0) + 1;
                     }
