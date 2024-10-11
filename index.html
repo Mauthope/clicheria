@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS for reading Excel files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light background for a clean look */
+            font-family: 'Arial', sans-serif; /* Modern font */
+        }
+        h2 {
+            color: #343a40; /* Darker text for better contrast */
+        }
+        .btn-outline-primary {
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for button hover */
+        }
+        .btn-outline-primary:hover {
+            background-color: #007bff; /* Primary color on hover */
+            color: white; /* White text on hover */
+        }
+        .card {
+            border-radius: 15px; /* Rounded corners for the card */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        }
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            background-color: rgba(0, 0, 0, 0.5); /* Dark background for navigation icons */
+        }
+    </style>
 </head>
 <body>
 
@@ -18,18 +42,20 @@
 
     <!-- Botões de filtro por mês -->
     <div class="text-center my-3">
-        <button class="btn btn-outline-primary mx-1" id="btn-janeiro">Janeiro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-fevereiro">Fevereiro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-marco">Março</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-abril">Abril</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-maio">Maio</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-junho">Junho</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-julho">Julho</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-agosto">Agosto</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-setembro">Setembro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-outubro">Outubro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-novembro">Novembro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-dezembro">Dezembro</button>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" id="btn-janeiro">Janeiro</button>
+            <button class="btn btn-outline-primary" id="btn-fevereiro">Fevereiro</button>
+            <button class="btn btn-outline-primary" id="btn-marco">Março</button>
+            <button class="btn btn-outline-primary" id="btn-abril">Abril</button>
+            <button class="btn btn-outline-primary" id="btn-maio">Maio</button>
+            <button class="btn btn-outline-primary" id="btn-junho">Junho</button>
+            <button class="btn btn-outline-primary" id="btn-julho">Julho</button>
+            <button class="btn btn-outline-primary" id="btn-agosto">Agosto</button>
+            <button class="btn btn-outline-primary" id="btn-setembro">Setembro</button>
+            <button class="btn btn-outline-primary" id="btn-outubro">Outubro</button>
+            <button class="btn btn-outline-primary" id="btn-novembro">Novembro</button>
+            <button class="btn btn-outline-primary" id="btn-dezembro">Dezembro</button>
+        </div>
     </div>
 
     <!-- Carousel for displaying the charts -->
@@ -44,11 +70,11 @@
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
+                    <span class="visually-hidden">Anterior</span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
+                    <span class="visually-hidden">Próximo</span>
                 </button>
             </div>
         </div>
@@ -60,119 +86,100 @@
 
 <!-- Inline Script for loading the Excel file and creating the chart -->
 <script>
-    // Declara uma variável para armazenar os dados originais da planilha
-    let originalData = []; 
-    // Declara uma variável para armazenar a instância do gráfico
-    let chartInstance = null; 
+    let originalData = [];
+    let chartInstance = null;
 
-    // Espera até que o conteúdo da página esteja totalmente carregado
     document.addEventListener('DOMContentLoaded', function () {
-        // Função para carregar a planilha Excel
         function loadExcelFile(filePath) {
-            // Busca o arquivo Excel
             fetch(filePath)
-                .then(response => response.arrayBuffer()) // Converte a resposta em um array buffer
+                .then(response => response.arrayBuffer())
                 .then(data => {
-                    // Lê o workbook a partir do array buffer
                     const workbook = XLSX.read(data, { type: "array" });
-                    const sheetName = workbook.SheetNames[0]; // Obtém o nome da primeira planilha
-                    const worksheet = workbook.Sheets[sheetName]; // Obtém a planilha
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converte a planilha para JSON
-                    originalData = jsonData; // Armazena os dados originais
-                    updateChartForMonth(null); // Atualiza o gráfico sem filtro de mês
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    originalData = jsonData;
+                    updateChartForMonth(null);
                 });
         }
 
-        // Função para analisar a data no formato DD-MM-YYYY
         function parseDate(dateString) {
-            const parts = dateString.split('-'); // Divide a string da data em partes
-            // Verifica se a data está no formato esperado
+            const parts = dateString.split('-');
             if (parts.length === 3) {
-                const day = parseInt(parts[0], 10); // Obtém o dia
-                const month = parseInt(parts[1], 10) - 1; // Obtém o mês (zero-indexado)
-                const year = parseInt(parts[2], 10); // Obtém o ano
-                return new Date(year, month, day); // Retorna um objeto Date
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                return new Date(year, month, day);
             }
-            return null; // Retorna null se o formato não for válido
+            return null;
         }
 
-        // Função para filtrar os dados pelo mês selecionado
         function updateChartForMonth(month) {
-            const columnData = {}; // Inicializa um objeto para armazenar os dados filtrados
+            const columnData = {};
 
-            // Itera sobre os dados da planilha
             for (let i = 1; i < originalData.length; i++) {
-                const item = originalData[i][2]; // Obtém o item da coluna 3
-                const date = originalData[i][0]; // Obtém a data da coluna 1
+                const item = originalData[i][2];
+                const date = originalData[i][0];
 
                 if (item && date) {
-                    const parsedDate = parseDate(date); // Usa a função para analisar a data
-                    if (parsedDate) { // Verifica se a data foi analisada corretamente
-                        const itemMonth = parsedDate.getMonth() + 1; // Obtém o mês da data
+                    const parsedDate = parseDate(date);
+                    if (parsedDate) {
+                        const itemMonth = parsedDate.getMonth() + 1;
 
-                        // Verifica se o item pertence ao mês selecionado
                         if (!month || itemMonth === month) {
-                            // Conta a ocorrência do item
-                            columnData[item] = (columnData[item] || 0) + 1; 
+                            columnData[item] = (columnData[item] || 0) + 1;
                         }
                     } else {
-                        console.error('Data inválida:', date); // Loga erro se a data for inválida
+                        console.error('Data inválida:', date);
                     }
                 }
             }
 
-            const labels = Object.keys(columnData); // Obtém as chaves (itens) do objeto
-            const values = Object.values(columnData); // Obtém os valores (contagens) do objeto
+            const labels = Object.keys(columnData);
+            const values = Object.values(columnData);
 
-            console.log('Labels:', labels); // Loga as labels
-            console.log('Values:', values); // Loga os valores
-
-            generateBarChart(labels, values); // Gera o gráfico com as labels e valores filtrados
+            generateBarChart(labels, values);
         }
 
-        // Função para gerar o gráfico de barras
         function generateBarChart(labels, data) {
-            const ctx = document.getElementById('barChart').getContext('2d'); // Obtém o contexto do canvas
+            const ctx = document.getElementById('barChart').getContext('2d');
 
-            // Destroi o gráfico anterior, se existir
             if (chartInstance) {
                 chartInstance.destroy();
             }
 
-            // Cria uma nova instância do gráfico
             chartInstance = new Chart(ctx, {
-                type: 'bar', // Define o tipo de gráfico como barra
+                type: 'bar',
                 data: {
-                    labels: labels, // Exibe os itens da coluna 3
+                    labels: labels,
                     datasets: [{
-                        label: 'Quantidade de Ocorrências', // Legenda do gráfico
-                        data: data, // Contagem de cada item
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Cor de fundo das barras
-                        borderColor: 'rgba(75, 192, 192, 1)', // Cor da borda das barras
-                        borderWidth: 1 // Largura da borda
+                        label: 'Quantidade de Ocorrências',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
                     }]
                 },
                 options: {
-                    responsive: true, // Torna o gráfico responsivo
+                    responsive: true,
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Ocorrências por Item (Filtrado por Mês)', // Título do gráfico
+                            text: 'Ocorrências por Item (Filtrado por Mês)',
                             font: {
-                                size: 20 // Tamanho da fonte do título
+                                size: 20
                             }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true // Inicia o eixo Y em zero
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
 
-        // Função para associar os botões de mês aos eventos de clique
         function setupMonthButtons() {
             const months = [
                 { id: "btn-janeiro", month: 1 },
@@ -189,18 +196,14 @@
                 { id: "btn-dezembro", month: 12 },
             ];
 
-            // Associa eventos de clique para cada botão de mês
             months.forEach(({ id, month }) => {
                 document.getElementById(id).addEventListener('click', () => {
-                    updateChartForMonth(month); // Filtra o gráfico para o mês selecionado
+                    updateChartForMonth(month);
                 });
             });
         }
 
-        // Carrega a planilha (certifique-se que está no mesmo diretório)
         loadExcelFile('clicheria.xlsx');
-
-        // Configura os botões de mês
         setupMonthButtons();
     });
 </script>
