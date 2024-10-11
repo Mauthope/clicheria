@@ -86,7 +86,7 @@
 
             for (let i = 1; i < originalData.length; i++) {
                 const item = originalData[i][2]; // Coluna 3
-                const date = originalData[i][0]; // Coluna 1 (data)
+                const date = originalData[i][1]; // Coluna 1 (data)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
@@ -117,7 +117,7 @@
                 data: {
                     labels: labels, // Exibe os itens da coluna 3
                     datasets: [{
-                        label: 'Quantidade de Ocorrências',
+                        label: 'Quantidade de Pedidos',
                         data: data, // Exibe a contagem de cada item
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
