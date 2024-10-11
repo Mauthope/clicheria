@@ -78,13 +78,14 @@
                 });
         }
 
-        // Filtra os dados pelo mês selecionado (coluna 1 com a data)
+        // Filtra os dados pelo mês selecionado (coluna 1 com a data) e verifica a coluna 4
         function updateChartForMonth(month) {
             const columnData = {}; // Reinicia o objeto para armazenar os dados
 
             for (let i = 1; i < originalData.length; i++) {
                 const item = originalData[i][2]; // Coluna 3 (itens)
                 const date = originalData[i][0]; // Coluna 1 (data)
+                const column4Value = originalData[i][3]; // Coluna 4 (valor que estamos filtrando)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
@@ -92,7 +93,8 @@
 
                     // Verifica se o item pertence ao mês selecionado
                     if (!month || itemMonth === month) {
-                        columnData[item] = (columnData[item] || 0) + 1;
+                        // Se o mês é selecionado, somente contar os itens que também estão na coluna 4
+                        columnData[item] = (columnData[item] || 0) + (column4Value || 0); // Soma a quantidade na coluna 4
                     }
                 }
             }
@@ -117,7 +119,7 @@
                     labels: labels, // Exibe os itens da coluna 3
                     datasets: [{
                         label: 'Quantidade de Ocorrências',
-                        data: data, // Exibe a contagem de cada item
+                        data: data, // Exibe a contagem de cada item na coluna 4
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
