@@ -88,8 +88,13 @@
                 const item = originalData[i][2]; // Coluna 3
                 const date = originalData[i][0]; // Coluna 1 (data)
 
-                if (item && (!month || (new Date(date).getMonth() + 1) === month)) {
-                    columnData[item] = (columnData[item] || 0) + 1;
+                if (item && date) {
+                    const parsedDate = new Date(Date.parse(date));
+                    const itemMonth = parsedDate.getMonth() + 1;
+
+                    if (!month || itemMonth === month) {
+                        columnData[item] = (columnData[item] || 0) + 1;
+                    }
                 }
             }
 
