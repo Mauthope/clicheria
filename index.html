@@ -60,91 +60,100 @@
 
 <!-- Inline Script for loading the Excel file and creating the chart -->
 <script>
-    let originalData = []; // Para armazenar todos os dados da planilha
-    let chartInstance = null; // Para armazenar a instância do gráfico
+    // Declara uma variável para armazenar os dados originais da planilha
+    let originalData = []; 
+    // Declara uma variável para armazenar a instância do gráfico
+    let chartInstance = null; 
 
+    // Espera até que o conteúdo da página esteja totalmente carregado
     document.addEventListener('DOMContentLoaded', function () {
-        // Carrega a planilha usando SheetJS
+        // Função para carregar a planilha Excel
         function loadExcelFile(filePath) {
+            // Busca o arquivo Excel
             fetch(filePath)
-                .then(response => response.arrayBuffer())
+                .then(response => response.arrayBuffer()) // Converte a resposta em um array buffer
                 .then(data => {
+                    // Lê o workbook a partir do array buffer
                     const workbook = XLSX.read(data, { type: "array" });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const sheetName = workbook.SheetNames[0]; // Obtém o nome da primeira planilha
+                    const worksheet = workbook.Sheets[sheetName]; // Obtém a planilha
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converte a planilha para JSON
                     originalData = jsonData; // Armazena os dados originais
-                    updateChartForMonth(null); // Carrega o gráfico sem filtro de mês no início
+                    updateChartForMonth(null); // Atualiza o gráfico sem filtro de mês
                 });
         }
 
-// Função para analisar a data no formato DD-MM-YYYY
-function parseDate(dateString) {
-    const parts = dateString.split('-');
-    // Verifica se a data está no formato esperado
-    if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1; // Mês é zero-indexed
-        const year = parseInt(parts[2], 10);
-        return new Date(year, month, day);
-    }
-    return null; // Retorna null se o formato não for válido
-}
-
-// Filtra os dados pelo mês selecionado (coluna 1 com a data)
-function updateChartForMonth(month) {
-    const columnData = {}; // Reinicia o objeto para armazenar os dados
-
-    for (let i = 1; i < originalData.length; i++) {
-        const item = originalData[i][2]; // Coluna 3 (itens)
-        const date = originalData[i][0]; // Coluna 1 (data)
-
-        if (item && date) {
-            const parsedDate = parseDate(date); // Usa a nova função para analisar a data
-            if (parsedDate) { // Verifica se a data foi analisada corretamente
-                const itemMonth = parsedDate.getMonth() + 1;
-
-                // Verifica se o item pertence ao mês selecionado
-                if (!month || itemMonth === month) {
-                    columnData[item] = (columnData[item] || 0) + 1;
-                }
-            } else {
-                console.error('Data inválida:', date);
+        // Função para analisar a data no formato DD-MM-YYYY
+        function parseDate(dateString) {
+            const parts = dateString.split('-'); // Divide a string da data em partes
+            // Verifica se a data está no formato esperado
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10); // Obtém o dia
+                const month = parseInt(parts[1], 10) - 1; // Obtém o mês (zero-indexado)
+                const year = parseInt(parts[2], 10); // Obtém o ano
+                return new Date(year, month, day); // Retorna um objeto Date
             }
+            return null; // Retorna null se o formato não for válido
         }
-    }
 
-    const labels = Object.keys(columnData);
-    const values = Object.values(columnData);
+        // Função para filtrar os dados pelo mês selecionado
+        function updateChartForMonth(month) {
+            const columnData = {}; // Inicializa um objeto para armazenar os dados filtrados
 
-    console.log('Labels:', labels);
-    console.log('Values:', values);
+            // Itera sobre os dados da planilha
+            for (let i = 1; i < originalData.length; i++) {
+                const item = originalData[i][2]; // Obtém o item da coluna 3
+                const date = originalData[i][0]; // Obtém a data da coluna 1
 
-    generateBarChart(labels, values);
-}
+                if (item && date) {
+                    const parsedDate = parseDate(date); // Usa a função para analisar a data
+                    if (parsedDate) { // Verifica se a data foi analisada corretamente
+                        const itemMonth = parsedDate.getMonth() + 1; // Obtém o mês da data
 
+                        // Verifica se o item pertence ao mês selecionado
+                        if (!month || itemMonth === month) {
+                            // Conta a ocorrência do item
+                            columnData[item] = (columnData[item] || 0) + 1; 
+                        }
+                    } else {
+                        console.error('Data inválida:', date); // Loga erro se a data for inválida
+                    }
+                }
+            }
+
+            const labels = Object.keys(columnData); // Obtém as chaves (itens) do objeto
+            const values = Object.values(columnData); // Obtém os valores (contagens) do objeto
+
+            console.log('Labels:', labels); // Loga as labels
+            console.log('Values:', values); // Loga os valores
+
+            generateBarChart(labels, values); // Gera o gráfico com as labels e valores filtrados
+        }
+
+        // Função para gerar o gráfico de barras
         function generateBarChart(labels, data) {
-            const ctx = document.getElementById('barChart').getContext('2d');
+            const ctx = document.getElementById('barChart').getContext('2d'); // Obtém o contexto do canvas
 
             // Destroi o gráfico anterior, se existir
             if (chartInstance) {
                 chartInstance.destroy();
             }
 
+            // Cria uma nova instância do gráfico
             chartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'bar', // Define o tipo de gráfico como barra
                 data: {
                     labels: labels, // Exibe os itens da coluna 3
                     datasets: [{
-                        label: 'Quantidade de Ocorrências',
-                        data: data, // Exibe a contagem de cada item
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        label: 'Quantidade de Ocorrências', // Legenda do gráfico
+                        data: data, // Contagem de cada item
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Cor de fundo das barras
+                        borderColor: 'rgba(75, 192, 192, 1)', // Cor da borda das barras
+                        borderWidth: 1 // Largura da borda
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: true, // Torna o gráfico responsivo
                     plugins: {
                         title: {
                             display: true,
@@ -156,7 +165,7 @@ function updateChartForMonth(month) {
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true // Inicia o eixo Y em zero
                         }
                     }
                 }
@@ -180,6 +189,7 @@ function updateChartForMonth(month) {
                 { id: "btn-dezembro", month: 12 },
             ];
 
+            // Associa eventos de clique para cada botão de mês
             months.forEach(({ id, month }) => {
                 document.getElementById(id).addEventListener('click', () => {
                     updateChartForMonth(month); // Filtra o gráfico para o mês selecionado
