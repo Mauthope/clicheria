@@ -86,7 +86,7 @@
 
             for (let i = 1; i < originalData.length; i++) {
                 const item = originalData[i][2]; // Coluna 3
-                const date = originalData[i][1]; // Coluna 1 (data)
+                const date = originalData[i][0]; // Coluna 1 (data)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
@@ -117,7 +117,7 @@
                 data: {
                     labels: labels, // Exibe os itens da coluna 3
                     datasets: [{
-                        label: 'Quantidade de Pedidos',
+                        label: 'Quantidade de Ocorrências',
                         data: data, // Exibe a contagem de cada item
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -125,24 +125,24 @@
                     }]
                 },
                 options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Quantidade de Pedidos', // Defina o título aqui
-                    font: {
-                        size: 20 // Tamanho da fonte do título
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Ocorrências por Item (Filtrado por Mês)', // Título do gráfico
+                            font: {
+                                size: 20 // Tamanho da fonte do título
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+            });
         }
-    });
-}
 
         // Carrega a planilha (certifique-se que está no mesmo diretório)
         loadExcelFile('clicheria.xlsx');
