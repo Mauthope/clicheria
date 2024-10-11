@@ -86,7 +86,7 @@
 
             for (let i = 1; i < originalData.length; i++) {
                 const item = originalData[i][2]; // Coluna 3
-                const date = originalData[i][0]; // Coluna 1 (data)
+                const date = originalData[i][4]; // Coluna 1 (data)
 
                 if (item && date) {
                     const parsedDate = new Date(Date.parse(date));
