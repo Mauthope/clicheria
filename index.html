@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrossel com Gráfico de Barras</title>
+    <title>Gráfico de Barras Mensal</title>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -23,6 +23,7 @@
             overflow: hidden;
             max-width: 600px;
             width: 100%;
+            padding: 20px;
         }
         .header {
             background-color: #007bff;
@@ -30,111 +31,26 @@
             padding: 15px;
             text-align: center;
         }
-        .carrossel {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .botoes-mes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-        .botoes-mes button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .botoes-mes button:hover {
-            background: #0056b3;
-        }
-        .botoes {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .botoes button {
-            padding: 8px 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .botoes button:hover {
-            background: #0056b3;
-        }
         canvas {
             width: 100% !important;
             max-width: 500px;
             height: auto !important;
-        }
-        .carrossel-tela {
-            display: none;
-        }
-        .carrossel-tela.active {
-            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>Gráfico de Barras - Contagem de Itens por Mês</h2>
+            <h2>Gráfico de Barras Mensal - Itens por Status</h2>
         </div>
-        <div class="carrossel">
-            <div class="carrossel-tela active" id="tela1">
-                <input type="file" id="input-excel" accept=".xlsx" />
-                <div class="botoes-mes">
-                    <button onclick="filtrarPorMes(-1)">Todos</button>
-                    <button onclick="filtrarPorMes(0)">Janeiro</button>
-                    <button onclick="filtrarPorMes(1)">Fevereiro</button>
-                    <button onclick="filtrarPorMes(2)">Março</button>
-                    <button onclick="filtrarPorMes(3)">Abril</button>
-                    <button onclick="filtrarPorMes(4)">Maio</button>
-                    <button onclick="filtrarPorMes(5)">Junho</button>
-                    <button onclick="filtrarPorMes(6)">Julho</button>
-                    <button onclick="filtrarPorMes(7)">Agosto</button>
-                    <button onclick="filtrarPorMes(8)">Setembro</button>
-                    <button onclick="filtrarPorMes(9)">Outubro</button>
-                    <button onclick="filtrarPorMes(10)">Novembro</button>
-                    <button onclick="filtrarPorMes(11)">Dezembro</button>
-                </div>
-                <canvas id="grafico"></canvas>
-                <div class="botoes">
-                    <button onclick="mostrarTela(2)">Próxima</button>
-                </div>
-            </div>
-            <div class="carrossel-tela" id="tela2">
-                <h3>Segunda Tela</h3>
-                <div class="botoes">
-                    <button onclick="mostrarTela(1)">Anterior</button>
-                </div>
-            </div>
-        </div>
+        <input type="file" id="input-excel" accept=".xlsx" />
+        <canvas id="grafico"></canvas>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let clicheria = [];
-
-        // Função para alternar entre as telas do carrossel
-        function mostrarTela(tela) {
-            document.querySelectorAll('.carrossel-tela').forEach((element, index) => {
-                element.classList.remove('active');
-                if (index === tela - 1) {
-                    element.classList.add('active');
-                }
-            });
-        }
 
         // Função para ler o arquivo Excel
         document.getElementById('input-excel').addEventListener('change', (event) => {
@@ -147,7 +63,7 @@
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 clicheria = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                filtrarPorMes(-1); // Mostrar todos os dados por padrão
+                criarGrafico(); // Criar gráfico após carregar os dados
             };
 
             reader.readAsArrayBuffer(file);
@@ -165,27 +81,46 @@
             return null; // Retorna null se não puder ser convertido
         }
 
-        // Função para agrupar dados por status para o mês selecionado
-        function agruparPorStatus(dados, mes) {
-            const contagemStatus = {};
+        // Função para agrupar dados por mês e status
+        function agruparPorMesEDados(dados) {
+            const meses = Array(12).fill().map(() => ({})); // Array de objetos para cada mês
             dados.forEach(row => {
                 const date = parseDate(row[1]); // Converte a data
                 const status = row[2];
                 // Verifica se a data é válida e se o status não está vazio
                 if (date && status) {
-                    if (mes === -1 || date.getMonth() === mes) {
-                        contagemStatus[status] = (contagemStatus[status] || 0) + 1;
-                    }
+                    const month = date.getMonth();
+                    meses[month][status] = (meses[month][status] || 0) + 1;
                 }
             });
-            return contagemStatus;
+            return meses;
         }
 
         // Função para criar o gráfico de barras
-        function criarGrafico(contagemStatus) {
+        function criarGrafico() {
+            const contagemStatus = agruparPorMesEDados(clicheria.slice(1));
             const ctx = document.getElementById('grafico').getContext('2d');
-            const labels = Object.keys(contagemStatus);
-            const data = Object.values(contagemStatus);
+            const labels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+            // Organizando os dados para o gráfico
+            const dadosPorStatus = {};
+            contagemStatus.forEach((statusMes) => {
+                Object.keys(statusMes).forEach(status => {
+                    if (!dadosPorStatus[status]) {
+                        dadosPorStatus[status] = Array(12).fill(0);
+                    }
+                    const mesIndex = labels.indexOf(statusMes);
+                    dadosPorStatus[status][mesIndex] = statusMes[status];
+                });
+            });
+
+            const datasets = Object.keys(dadosPorStatus).map((status, index) => ({
+                label: status,
+                data: dadosPorStatus[status],
+                backgroundColor: `rgba(${(index + 1) * 60}, 99, 132, 0.5)`, // Cores diferentes para cada status
+                borderColor: `rgba(${(index + 1) * 60}, 99, 132, 1)`,
+                borderWidth: 1
+            }));
 
             if (window.meuGrafico) {
                 window.meuGrafico.destroy();
@@ -195,13 +130,7 @@
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Contagem por Status',
-                        data: data,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
+                    datasets: datasets,
                 },
                 options: {
                     responsive: true,
@@ -212,13 +141,6 @@
                     }
                 }
             });
-        }
-
-        // Função para filtrar e atualizar o gráfico por mês
-        function filtrarPorMes(mes) {
-            if (clicheria.length === 0) return;
-            const contagemStatus = agruparPorStatus(clicheria.slice(1), mes);
-            criarGrafico(contagemStatus);
         }
     </script>
 </body>
