@@ -76,6 +76,12 @@
             max-width: 500px;
             height: auto !important;
         }
+        .carrossel-tela {
+            display: none;
+        }
+        .carrossel-tela.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +91,9 @@
         </div>
         <div class="carrossel">
             <div class="carrossel-tela active" id="tela1">
+                <input type="file" id="input-excel" accept=".xlsx" />
                 <div class="botoes-mes">
+                    <button onclick="filtrarPorMes(-1)">Todos</button>
                     <button onclick="filtrarPorMes(0)">Janeiro</button>
                     <button onclick="filtrarPorMes(1)">Fevereiro</button>
                     <button onclick="filtrarPorMes(2)">Março</button>
@@ -113,8 +121,11 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let clicheria = [];
+
         // Função para alternar entre as telas do carrossel
         function mostrarTela(tela) {
             document.querySelectorAll('.carrossel-tela').forEach((element, index) => {
@@ -125,20 +136,22 @@
             });
         }
 
-        // Dados de exemplo da planilha
-        const clicheria = [
-            ['ID', 'Data', 'Status'],
-            [1, '2024-01-15', 'novo'],
-            [2, '2024-01-20', 'revisado'],
-            [3, '2024-02-10', 'novo'],
-            [4, '2024-02-22', 'outro'],
-            [5, '2024-03-15', 'novo'],
-            [6, '2024-03-18', 'revisado'],
-            [7, '2024-01-25', 'outro'],
-            [8, '2024-02-28', 'novo'],
-            [9, '2024-04-05', 'novo'],
-            [10, '2024-04-10', 'outro']
-        ];
+        // Função para ler o arquivo Excel
+        document.getElementById('input-excel').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                clicheria = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                filtrarPorMes(-1); // Mostrar todos os dados por padrão
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
 
         // Função para agrupar dados por status para o mês selecionado
         function agruparPorStatus(dados, mes) {
@@ -146,7 +159,7 @@
             dados.forEach(row => {
                 const date = new Date(row[1]);
                 const status = row[2];
-                if (date.getMonth() === mes) {
+                if (mes === -1 || date.getMonth() === mes) {
                     contagemStatus[status] = (contagemStatus[status] || 0) + 1;
                 }
             });
@@ -188,12 +201,10 @@
 
         // Função para filtrar e atualizar o gráfico por mês
         function filtrarPorMes(mes) {
+            if (clicheria.length === 0) return;
             const contagemStatus = agruparPorStatus(clicheria.slice(1), mes);
             criarGrafico(contagemStatus);
         }
-
-        // Inicializa o gráfico com o mês de Janeiro
-        filtrarPorMes(0);
     </script>
 </body>
 </html>
