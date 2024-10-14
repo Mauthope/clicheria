@@ -159,8 +159,11 @@
             dados.forEach(row => {
                 const date = new Date(row[1]);
                 const status = row[2];
-                if (mes === -1 || date.getMonth() === mes) {
-                    contagemStatus[status] = (contagemStatus[status] || 0) + 1;
+                // Verifica se a data é válida e se o status não está vazio
+                if (!isNaN(date.getTime()) && status) {
+                    if (mes === -1 || date.getMonth() === mes) {
+                        contagemStatus[status] = (contagemStatus[status] || 0) + 1;
+                    }
                 }
             });
             return contagemStatus;
