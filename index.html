@@ -6,37 +6,70 @@
     <title>Carrossel com Gráfico de Barras</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
         }
         .carrossel {
-            width: 100%;
-            max-width: 600px;
-            overflow: hidden;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 20px;
         }
-        .carrossel-tela {
-            display: none;
-            width: 100%;
+        .botoes-mes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
         }
-        .carrossel-tela.active {
-            display: block;
+        .botoes-mes button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .botoes-mes button:hover {
+            background: #0056b3;
         }
         .botoes {
-            margin-top: 10px;
+            margin-top: 20px;
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
-        button {
-            padding: 5px 10px;
+        .botoes button {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background 0.3s;
+        }
+        .botoes button:hover {
+            background: #0056b3;
         }
         canvas {
             width: 100% !important;
@@ -46,17 +79,36 @@
     </style>
 </head>
 <body>
-    <div class="carrossel">
-        <div class="carrossel-tela active" id="tela1">
-            <canvas id="grafico"></canvas>
-            <div class="botoes">
-                <button onclick="mostrarTela(2)">Próxima</button>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h2>Gráfico de Barras - Contagem de Itens por Mês</h2>
         </div>
-        <div class="carrossel-tela" id="tela2">
-            <h2>Segunda Tela</h2>
-            <div class="botoes">
-                <button onclick="mostrarTela(1)">Anterior</button>
+        <div class="carrossel">
+            <div class="carrossel-tela active" id="tela1">
+                <div class="botoes-mes">
+                    <button onclick="filtrarPorMes(0)">Janeiro</button>
+                    <button onclick="filtrarPorMes(1)">Fevereiro</button>
+                    <button onclick="filtrarPorMes(2)">Março</button>
+                    <button onclick="filtrarPorMes(3)">Abril</button>
+                    <button onclick="filtrarPorMes(4)">Maio</button>
+                    <button onclick="filtrarPorMes(5)">Junho</button>
+                    <button onclick="filtrarPorMes(6)">Julho</button>
+                    <button onclick="filtrarPorMes(7)">Agosto</button>
+                    <button onclick="filtrarPorMes(8)">Setembro</button>
+                    <button onclick="filtrarPorMes(9)">Outubro</button>
+                    <button onclick="filtrarPorMes(10)">Novembro</button>
+                    <button onclick="filtrarPorMes(11)">Dezembro</button>
+                </div>
+                <canvas id="grafico"></canvas>
+                <div class="botoes">
+                    <button onclick="mostrarTela(2)">Próxima</button>
+                </div>
+            </div>
+            <div class="carrossel-tela" id="tela2">
+                <h3>Segunda Tela</h3>
+                <div class="botoes">
+                    <button onclick="mostrarTela(1)">Anterior</button>
+                </div>
             </div>
         </div>
     </div>
@@ -79,48 +131,52 @@
             [1, '2024-01-15', 'novo'],
             [2, '2024-01-20', 'novo'],
             [3, '2024-02-10', 'novo'],
-            [4, '2024-02-22', 'novo'],
-            [5, '2024-03-15', 'outro'],
-            [6, '2024-03-18', 'novo'],
+            [4, '2024-02-22', 'outro'],
+            [5, '2024-03-15', 'novo'],
+            [6, '2024-03-18', 'outro'],
             [7, '2024-01-25', 'outro'],
             [8, '2024-02-28', 'novo'],
-            [9, '2024-04-05', 'novo']
+            [9, '2024-04-05', 'novo'],
+            [10, '2024-04-10', 'outro']
         ];
 
-        // Função para agrupar dados por mês e contar os "novo"
-        function agruparPorMes(dados) {
-            const contagemMensal = Array(12).fill(0);
+        // Função para agrupar dados por status para o mês selecionado
+        function agruparPorStatus(dados, mes) {
+            const contagemStatus = {};
             dados.forEach(row => {
                 const date = new Date(row[1]);
                 const status = row[2];
-                if (status === 'novo') {
-                    const month = date.getMonth();
-                    contagemMensal[month]++;
+                if (date.getMonth() === mes) {
+                    contagemStatus[status] = (contagemStatus[status] || 0) + 1;
                 }
             });
-            return contagemMensal;
+            return contagemStatus;
         }
 
         // Função para criar o gráfico de barras
-        function criarGrafico(contagemMensal) {
+        function criarGrafico(contagemStatus) {
             const ctx = document.getElementById('grafico').getContext('2d');
-            new Chart(ctx, {
+            const labels = Object.keys(contagemStatus);
+            const data = Object.values(contagemStatus);
+
+            if (window.meuGrafico) {
+                window.meuGrafico.destroy();
+            }
+
+            window.meuGrafico = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: [
-                        'Janeiro', 'Fevereiro', 'Março', 'Abril', 
-                        'Maio', 'Junho', 'Julho', 'Agosto', 
-                        'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                    ],
+                    labels: labels,
                     datasets: [{
-                        label: 'Contagem de "novo" por mês',
-                        data: contagemMensal,
+                        label: 'Contagem por Status',
+                        data: data,
                         backgroundColor: 'rgba(54, 162, 235, 0.5)',
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
                     }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
                         y: {
                             beginAtZero: true
@@ -130,9 +186,14 @@
             });
         }
 
-        // Inicializa o gráfico com os dados da planilha
-        const contagemMensal = agruparPorMes(clicheria.slice(1));
-        criarGrafico(contagemMensal);
+        // Função para filtrar e atualizar o gráfico por mês
+        function filtrarPorMes(mes) {
+            const contagemStatus = agruparPorStatus(clicheria.slice(1), mes);
+            criarGrafico(contagemStatus);
+        }
+
+        // Inicializa o gráfico com o mês de Janeiro
+        filtrarPorMes(0);
     </script>
 </body>
 </html>
