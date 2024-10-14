@@ -3,200 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Responsivo</title>
-    <!-- Bootstrap CSS for the carousel and layout -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Chart.js for generating charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS for reading Excel files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <title>Carrossel com Gráfico de Barras</title>
     <style>
         body {
-            background-color: #f8f9fa;
-            color: #333;
-        }
-        h2 {
-            margin-bottom: 20px;
-        }
-        .carousel-inner {
-            height: 400px; /* Ajuste a altura do gráfico */
-        }
-        .carousel-item {
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .carrossel {
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .carrossel-tela {
+            display: none;
+            width: 100%;
+        }
+        .carrossel-tela.active {
+            display: block;
+        }
+        .botoes {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        canvas {
+            width: 100% !important;
+            max-width: 500px;
+            height: auto !important;
         }
     </style>
 </head>
 <body>
-
-<div class="container mt-5">
-    <h2 class="text-center">Dashboard de Gráficos</h2>
-
-    <!-- Botões de filtro por mês -->
-    <div class="text-center my-3">
-        <button class="btn btn-outline-primary mx-1" id="btn-janeiro">Janeiro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-fevereiro">Fevereiro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-marco">Março</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-abril">Abril</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-maio">Maio</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-junho">Junho</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-julho">Julho</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-agosto">Agosto</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-setembro">Setembro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-outubro">Outubro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-novembro">Novembro</button>
-        <button class="btn btn-outline-primary mx-1" id="btn-dezembro">Dezembro</button>
-    </div>
-
-    <!-- Carousel for displaying the charts -->
-    <div class="card">
-        <div class="card-body">
-            <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    <!-- First carousel item (Bar chart) -->
-                    <div class="carousel-item active">
-                        <canvas id="barChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
+    <div class="carrossel">
+        <div class="carrossel-tela active" id="tela1">
+            <canvas id="grafico"></canvas>
+            <div class="botoes">
+                <button onclick="mostrarTela(2)">Próxima</button>
+            </div>
+        </div>
+        <div class="carrossel-tela" id="tela2">
+            <h2>Segunda Tela</h2>
+            <div class="botoes">
+                <button onclick="mostrarTela(1)">Anterior</button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Bootstrap JS for carousel functionality -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Inline Script for loading the Excel file and creating the chart -->
-<script>
-    // Declara uma variável para armazenar os dados originais da planilha
-    let originalData = []; 
-    // Declara uma variável para armazenar a instância do gráfico
-    let chartInstance = null; 
-
-    // Espera até que o conteúdo da página esteja totalmente carregado
-    document.addEventListener('DOMContentLoaded', function () {
-        // Função para carregar a planilha Excel
-        function loadExcelFile(filePath) {
-            // Busca o arquivo Excel
-            fetch(filePath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar o arquivo Excel: ' + response.statusText);
-                    }
-                    return response.arrayBuffer(); // Converte a resposta em um array buffer
-                })
-                .then(data => {
-                    // Lê o workbook a partir do array buffer
-                    const workbook = XLSX.read(data, { type: "array" });
-                    const sheetName = workbook.SheetNames[0]; // Obtém o nome da primeira planilha
-                    const worksheet = workbook.Sheets[sheetName]; // Obtém a planilha
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converte a planilha para JSON
-                    originalData = jsonData; // Armazena os dados originais
-                    updateChartForMonth(null); // Atualiza o gráfico sem filtro de mês
-                })
-                .catch(error => console.error(error)); // Loga qualquer erro encontrado
-        }
-
-        // Função para analisar a data no formato DD-MM-YYYY
-        function parseDate(dateString) {
-            const parts = dateString.split('-'); // Divide a string da data em partes
-            // Verifica se a data está no formato esperado
-            if (parts.length === 3) {
-                const day = parseInt(parts[0], 10); // Obtém o dia
-                const month = parseInt(parts[1], 10) - 1; // Obtém o mês (zero-indexado)
-                const year = parseInt(parts[2], 10); // Obtém o ano
-                return new Date(year, month, day); // Retorna um objeto Date
-            }
-            return null; // Retorna null se o formato não for válido
-        }
-
-        // Função para filtrar os dados pelo mês selecionado
-        function updateChartForMonth(month) {
-            const columnData = {}; // Inicializa um objeto para armazenar os dados filtrados
-
-            // Itera sobre os dados da planilha
-            for (let i = 1; i < originalData.length; i++) {
-                const item = originalData[i][2]; // Obtém o item da coluna 3
-                const date = originalData[i][0]; // Obtém a data da coluna 1
-
-                if (item && date) {
-                    const parsedDate = parseDate(date); // Usa a função para analisar a data
-                    if (parsedDate) { // Verifica se a data foi analisada corretamente
-                        const itemMonth = parsedDate.getMonth() + 1; // Obtém o mês da data
-
-                        // Verifica se o item pertence ao mês selecionado
-                        if (!month || itemMonth === month) {
-                            // Conta a ocorrência do item
-                            columnData[item] = (columnData[item] || 0) + 1; 
-                        }
-                    } else {
-                        console.error('Data inválida:', date); // Loga erro se a data for inválida
-                    }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Função para alternar entre as telas do carrossel
+        function mostrarTela(tela) {
+            document.querySelectorAll('.carrossel-tela').forEach((element, index) => {
+                element.classList.remove('active');
+                if (index === tela - 1) {
+                    element.classList.add('active');
                 }
-            }
-
-            const labels = Object.keys(columnData); // Obtém as chaves (itens) do objeto
-            const values = Object.values(columnData); // Obtém os valores (contagens) do objeto
-
-            console.log('Labels:', labels); // Loga as labels
-            console.log('Values:', values); // Loga os valores
-
-            generateBarChart(labels, values); // Gera o gráfico com as labels e valores filtrados
+            });
         }
 
-        // Função para gerar o gráfico de barras
-        function generateBarChart(labels, data) {
-            const ctx = document.getElementById('barChart').getContext('2d'); // Obtém o contexto do canvas
+        // Dados de exemplo da planilha
+        const clicheria = [
+            ['ID', 'Data', 'Status'],
+            [1, '2024-01-15', 'novo'],
+            [2, '2024-01-20', 'novo'],
+            [3, '2024-02-10', 'novo'],
+            [4, '2024-02-22', 'novo'],
+            [5, '2024-03-15', 'outro'],
+            [6, '2024-03-18', 'novo'],
+            [7, '2024-01-25', 'outro'],
+            [8, '2024-02-28', 'novo'],
+            [9, '2024-04-05', 'novo']
+        ];
 
-            // Destroi o gráfico anterior, se existir
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+        // Função para agrupar dados por mês e contar os "novo"
+        function agruparPorMes(dados) {
+            const contagemMensal = Array(12).fill(0);
+            dados.forEach(row => {
+                const date = new Date(row[1]);
+                const status = row[2];
+                if (status === 'novo') {
+                    const month = date.getMonth();
+                    contagemMensal[month]++;
+                }
+            });
+            return contagemMensal;
+        }
 
-            // Cria uma nova instância do gráfico
-            chartInstance = new Chart(ctx, {
-                type: 'bar', // Define o tipo de gráfico como barra
+        // Função para criar o gráfico de barras
+        function criarGrafico(contagemMensal) {
+            const ctx = document.getElementById('grafico').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: labels.length > 0 ? labels : ['Sem Dados'], // Exibe os itens da coluna 3 ou uma mensagem
+                    labels: [
+                        'Janeiro', 'Fevereiro', 'Março', 'Abril', 
+                        'Maio', 'Junho', 'Julho', 'Agosto', 
+                        'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                    ],
                     datasets: [{
-                        label: 'Contagem de Itens', // Label do conjunto de dados
-                        data: data.length > 0 ? data : [0], // Exibe a contagem ou zero
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Cor de fundo das barras
-                        borderColor: 'rgba(75, 192, 192, 1)', // Cor da borda das barras
-                        borderWidth: 1 // Largura da borda
+                        label: 'Contagem de "novo" por mês',
+                        data: contagemMensal,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true // Inicia o eixo y em zero
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
 
-        // Carrega o arquivo Excel ao iniciar
-        loadExcelFile('clicheria.xlsx'); // Altere para o caminho correto do seu arquivo
-
-        // Adiciona ouvintes de evento para os botões de filtro
-        document.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', () => {
-                const month = parseInt(button.id.split('-')[1]); // Extrai o número do mês do ID do botão
-                updateChartForMonth(month); // Atualiza o gráfico para o mês correspondente
-            });
-        });
-    });
-</script>
+        // Inicializa o gráfico com os dados da planilha
+        const contagemMensal = agruparPorMes(clicheria.slice(1));
+        criarGrafico(contagemMensal);
+    </script>
 </body>
 </html>
